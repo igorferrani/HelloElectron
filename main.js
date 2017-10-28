@@ -28,12 +28,7 @@ function createWindow(){
   // Check whether a shortcut is registered.
   console.log(globalShortcut.isRegistered('CommandOrControl+X'))
 
-	win.webContents.openDevTools()
-}
-
-exports.shortcut = () => {
-  console.log("oi")
-
+	//win.webContents.openDevTools()
 }
 
 exports.openWindow = () => {

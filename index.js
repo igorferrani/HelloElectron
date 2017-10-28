@@ -6,5 +6,5 @@ button.textContent = "Open Window"
 document.body.appendChild(button)
 
 button.addEventListener('click', () => {
-	main.shortcut()
+	main.openWindow()
 })

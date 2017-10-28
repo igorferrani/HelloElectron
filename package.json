@@ -2,10 +2,12 @@
   "name": "helloelectron",
   "version": "1.0.0",
   "description": "Hello word com o framework Electron",
-  "main": "index.js",
+  "main": "./main.js",
   "scripts": {
-    "start" : "electron main.js",
-    "init" : "npm install electron"
+    "start": "electron .",
+    "pack": "build --dir",
+    "dist": "build",
+    "init": "npm install electron && npm install"
   },
   "repository": {
     "type": "git",
@@ -14,10 +16,41 @@
   "keywords": [
     "Electron"
   ],
-  "author": "Igor Ferrani, Weliton de oliveira",
+  "author": "Igor Ferrani <igor.ferrani@gmail.com>",
   "license": "ISC",
+  "build": {
+    "appId": "enupal-electronv1",
+    "asar": true,
+    "dmg": {
+      "contents": [
+        {
+          "x": 110,
+          "y": 150
+        },
+        {
+          "x": 240,
+          "y": 150,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ]
+    },
+    "win": {
+      "target": "NSIS",
+      "icon": "build/icon.ico"
+    }
+  },
   "bugs": {
     "url": "https://github.com/igorferrani/HelloElectron/issues"
   },
-  "homepage": "https://github.com/igorferrani/HelloElectron#readme"
+  "homepage": "https://github.com/igorferrani/HelloElectron#readme",
+  "dependencies": {
+    "pretty-bytes": "^4.0.2"
+  }
 }
