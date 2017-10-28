@@ -5,7 +5,7 @@ Hello word com o framework Electron
 
 Baixe o repositório em seu diretório local:
 
-    https://github.com/igorferrani/HelloElectron.git
+    git clone https://github.com/igorferrani/HelloElectron.git
 
 Depois de extraido caminhe até a pasta de seu projeto pelo prompt:
 
