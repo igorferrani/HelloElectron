@@ -2,7 +2,7 @@
   "name": "helloelectron",
   "version": "1.0.0",
   "description": "Hello word com o framework Electron",
-  "main": "./main.js",
+  "main": "./public/main.js",
   "scripts": {
     "start": "electron .",
     "pack": "build --dir",
@@ -51,6 +51,12 @@
   },
   "homepage": "https://github.com/igorferrani/HelloElectron#readme",
   "dependencies": {
-    "pretty-bytes": "^4.0.2"
+    "fast-csv": "^2.4.1",
+    "pretty-bytes": "^4.0.2",
+    "vue": "^2.5.2"
+  },
+  "devDependencies": {
+    "fs": "0.0.1-security",
+    "vue-template-compiler": "^2.5.2"
   }
 }
