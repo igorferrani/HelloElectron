@@ -2,41 +2,105 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
-	<title>Hello Electron</title>
+	<title>Service Monitor</title>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
 	<style media="screen">
 		* {
 			margin:0;
 			padding:0
 		}
-		body {
-			border:1px solid #f00
+		@-moz-keyframes spin {
+		    from { -moz-transform: rotate(0deg); }
+		    to { -moz-transform: rotate(360deg); }
+		}
+		@-webkit-keyframes spin {
+		    from { -webkit-transform: rotate(0deg); }
+		    to { -webkit-transform: rotate(360deg); }
+		}
+		@keyframes spin {
+		    from {transform:rotate(0deg);}
+		    to {transform:rotate(360deg);}
+		}@keyframes pulse {
+		  0% { opacity:0 }
+		  50% { opacity:1 }
+			100% { opacity:0 }
+		}
+
+		.status-default { color:#777 }
+		.status-primary { color:#337ab7 }
+		.status-success { color:#5cb85c }
+		.status-info { color:#5bc0de }
+		.status-warning { color:#f0ad4e }
+		.status-danger { color:#d9534f }
+		.status-pulse {
+			animation: pulse 1s infinite;
+		}
+		.btnLoading {
+		    -webkit-animation-name: spin;
+		    -webkit-animation-duration: 1000ms;
+		    -webkit-animation-iteration-count: infinite;
+		    -webkit-animation-timing-function: linear;
+		    -moz-animation-name: spin;
+		    -moz-animation-duration: 1000ms;
+		    -moz-animation-iteration-count: infinite;
+		    -moz-animation-timing-function: linear;
+		    -ms-animation-name: spin;
+		    -ms-animation-duration: 1000ms;
+		    -ms-animation-iteration-count: infinite;
+		    -ms-animation-timing-function: linear;
+
+		    animation-name: spin;
+		    animation-duration: 1000ms;
+		    animation-iteration-count: infinite;
+		    animation-timing-function: linear;
 		}
 	</style>
 </head>
 <body>
-	<h1> Hello world</h1>
-
-	<button type="button" @click="escrever()" name="button">escrever</button>
-
-	<div id="app">
-		<table>
-			<thead>
-				<tr>
-						<th v-for="(value, key) in objects[0]">{{ key }}</th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr v-for="object in objects">
-					<td v-for="(value, key) in object">{{ value }}</td>
-				</tr>
-			</tbody>
-		</table>
+	<div id="app" class="container">
+		<h1>Service Monitor</h1>
+		<div class="btn-group">
+			<div class="input-group" style="width: 180px;" v-if="!auto">
+				<div class="input-group-btn">
+					<button class="btn btn-primary" @click="autoRequest()"><span class="glyphicon glyphicon-play"></span> AutoRequest</button>
+				</div>
+				<input type="text" class="form-control" v-on:keypress.enter="autoRequest()" v-model="timeLoop">
+			</div>
+			<button class="btn btn-primary" @click="pauseLoop()" v-if="auto"><span class="glyphicon glyphicon-pause"></span> Pause</button>
+			<button class="btn btn-default" disabled="disabled" v-if="auto">{{ totalSeconds }}s</button>
+		</div>
+		<button class="btn btn-success" @click="addService()">Adicionar serviço</button>
+		<br>
+		<br>
+		<div class="" v-for="(item, key) in itens">
+			<div class="form-group">
+			<span class="glyphicon glyphicon-stop" v-bind:class="{
+				'status-default' : item.status == '',
+				'status-pulse' : item.status != '',
+				'status-success' : item.status == 200,
+				'status-danger' : item.status != 200 && item.status != ''
+				}" style="margin-top: 7px;float: left;margin-right: 10px;"></span>
+				<div class="input-group">
+					<input type="text" class="form-control" v-on:keypress="inputKeyPress(item, key,$event)" v-model="item.url">
+					<div class="input-group-btn">
+						<button class="btn btn-default" type="button" @click="request(item, key)" v-bind:disabled="item.request ? true : false"><span v-if="!item.request">Verificar</span><span v-if="item.request" class="glyphicon glyphicon-refresh btnLoading"></span></button>
+						<button class="btn btn-danger" type="button" @click="removeService(key)">Remover</button>
+					</div>
+				</div>
+			</div>
+			<div class="alert" v-if="item.status != ''" v-bind:class="{ 'alert-success' : item.status == 200 }" role="alert">
+				<a href="#" class="alert-link">{{ item.status }}</a>
+			</div>
+		</div>
 	</div>
 
 	<script>
-		require('./index.js')
+		window.$ = window.jQuery = require('jquery/dist/jquery.js')
+
+		//require('./index.js')
 		const Vue = require('vue/dist/vue.js')
-		//const App = require('./App.vue')
+		const WSService = require('./assets/js/service/WS.service.js')
+		const Service = require('./assets/js/model/service.js')
 
 		const csv = require('fast-csv')
 		const fs = require('fs')
@@ -44,46 +108,110 @@
 		 new Vue({
 			 el: "#app",
 			 data: {
-				 objects: [],
-				 file: __dirname + "/my.csv"
+				 itens: [
+					 new Service({})
+				 ],
+				 totalSeconds: 1,
+				 auto: false,
+				 fileLog: __dirname + "/log.txt",
+				 timeLoop: 10
 			 },
 			 methods: {
-				 buscaCsv () {
+				 request (item, key) {
+					 if(item.request || item.url == '' || !item.url)
+					 	return false
 					 let _self = this
-					 var stream = fs.createReadStream(_self.file);
-	 				csv
-	 				 .fromStream(stream, {headers : ["nome", "idade", "cidade"]})
-	 				 .on("data", function(data){
-	 				     _self.objects.push(data);
-	 				 })
-	 				 .on("end", function(){
-	 				     console.log("done");
-	 				 });
+					 let aux = _self.itens
+					 item.request = true
+					 _self.itens[key] = item
+					 let url = !item.url.indexOf('http://') || !item.url.indexOf('https://') ? item.url : "http://" + item.url
+					 new WSService().request(url).done(function(retorno){
+						 if(retorno.status != 200){
+						 	_self.writeLog(retorno)
+							alert("Requisição à URL: "+retorno.responseURL+" falhou !")
+						}
+
+						item.status = retorno.status
+						item.request = false
+						_self.itens[key] = item
+						_self.$forceUpdate();
+					 });
 				 },
-				 escrever () {
+				 checkIgnore () {
 					 let _self = this
-					 var csvStream = csv.createWriteStream({headers: true}),
-						    writableStream = fs.createWriteStream(_self.file);
+					 let countIgnore = 0
+					 for (var i = 0; i < _self.itens.length; i++) {
+							if(!_self.itens[i].url || _self.itens[i].url == '')
+								countIgnore++
+					 }
+					 return countIgnore
+				 },
+				 autoRequest () {
+					 let _self = this
+					 if(_self.checkIgnore() > 0){
+						 alert("Você precisa informar a URL")
+							_self.pauseLoop()
+						 return false
+					 }
 
-						writableStream.on("finish", function(){
-						  console.log("DONE!");
-						});
+					 if(_self.timeLoop < 2){
+						 alert("Informe um tempo maior que 1 segundo")
+						 _self.pauseLoop()
+							return false
+					 }
 
-						csvStream.pipe(writableStream);
-						csvStream.write({a: "meu pe", b: "fdfdfd", c:"serrao"});
-						csvStream.write({a: "meu pe", b: "fdfdfd", c:"serrao"});
-						csvStream.write({a: "meu pe", b: "fdfdfd", c:"serrao"});
-						csvStream.write({a: "meu pe", b: "fdfdfd", c:"serrao"});
-						csvStream.write({a: "meu pe", b: "fdfdfd", c:"serrao"});
-						csvStream.write({a: "meu pe", b: "fdfdfd", c:"serrao"});
-						csvStream.end(function(){
-							_self.buscaCsv()
-						});
+					 _self.auto = true
+					 window.second = null
+					 function loop () {
+						 _self.totalSeconds = 1;
+						 window.clearInterval(window.second)
+						 for (var i = 0; i < _self.itens.length; i++) {
+							 	if(_self.itens[i].url && _self.itens[i].url != '')
+							 		_self.request(_self.itens[i], i)
+						 }
+
+						 window.second = setInterval(function(){
+							 ++_self.totalSeconds;
+						 }, 1000);
+					 }
+					 loop()
+					 window.loop = setInterval(function(){
+						 loop()
+					 }, _self.timeLoop * 1000)
+				 },
+				 pauseLoop () {
+					 let _self = this
+					 window.clearInterval(window.loop)
+					 window.clearInterval(window.second)
+					 _self.totalSeconds = 1
+					 _self.auto = false
+				 },
+				 addService () {
+					 this.pauseLoop()
+					 this.itens.push(new Service({}))
+				 },
+				 removeService (key) {
+					 if(this.itens.length > 1)
+					 	this.itens.splice(key, 1)
+				 },
+				 inputKeyPress (item, key, event) {
+					 this.pauseLoop()
+					 if(event.key == 'Enter')
+					 	this.request(item, key)
+				 },
+				 writeLog (resposta) {
+					 	let fs = require('fs');
+						let _self = this
+						var logger = fs.createWriteStream(_self.fileLog, {
+						  flags: 'a' // 'a' means appending (old data will be preserved)
+						})
+						let content = new Date() + " - Status: " + resposta.status + " - URL: " + resposta.responseURL
+						logger.write('\n' + content)
 				 }
 			 },
 			 mounted () {
-				 this.escrever()
-			 }
+					//this.writeLog("igor ferrani")
+				}
 		 })
 	</script>
 </body>

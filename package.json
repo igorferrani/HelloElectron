@@ -52,6 +52,7 @@
   "homepage": "https://github.com/igorferrani/HelloElectron#readme",
   "dependencies": {
     "fast-csv": "^2.4.1",
+    "jquery": "^3.2.1",
     "pretty-bytes": "^4.0.2",
     "vue": "^2.5.2"
   },
