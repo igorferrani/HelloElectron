@@ -1,15 +1,15 @@
-# HelloElectron
-Hello word com o framework Electron
+# ServiceMonitor.electron
+Monitorador de serviços web
 
 ### Iniciando o projeto ###
 
 Baixe o repositório em seu diretório local:
 
-    git clone https://github.com/igorferrani/HelloElectron.git
+    git clone https://github.com/igorferrani/ServiceMonitor.electron.git
 
 Depois de extraido caminhe até a pasta de seu projeto pelo prompt:
 
-    cd "C:/caminho_projeto/HelloElectron"
+    cd "C:/caminho_projeto/ServiceMonitor.electron"
 
 Digite o seguinte comando para iniciar algumas configurações do projeto e instalar as dependências necessárias:
 
