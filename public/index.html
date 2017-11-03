@@ -70,23 +70,31 @@
 			<button class="btn btn-default" disabled="disabled" v-if="auto">{{ totalSeconds }}s</button>
 		</div>
 		<button class="btn btn-success" @click="addService()">Adicionar serviço</button>
-		<br>
-		<br>
-		<div class="" v-for="(item, key) in itens">
-			<div class="form-group">
-			<span class="glyphicon glyphicon-stop" v-bind:class="{
-				'status-default' : item.status == '',
-				'status-pulse' : item.status != '',
-				'status-success' : item.status == 200,
-				'status-danger' : item.status != 200 && item.status != ''
-				}" style="margin-top: 7px;float: left;margin-right: 10px;"></span>
-				<div class="input-group">
-					<input type="text" class="form-control" v-on:keypress="inputKeyPress(item, key,$event)" v-model="item.url">
-					<div class="input-group-btn">
-						<button class="btn btn-default" type="button" @click="request(item, key)" v-bind:disabled="item.request ? true : false"><span v-if="!item.request">Verificar</span><span v-if="item.request" class="glyphicon glyphicon-refresh btnLoading"></span></button>
-						<button class="btn btn-danger" type="button" @click="removeService(key)">Remover</button>
+		<hr>
+		<div class="row">
+			<div class="col-xs-8">
+				<h3>Serviços</h3>
+				<div class="" v-for="(item, key) in itens">
+					<div class="form-group">
+					<span class="glyphicon glyphicon-stop" v-bind:class="{
+						'status-default' : item.status == '',
+						'status-pulse status-warning' : item.request,
+						'status-success' : item.status == 200,
+						'status-danger' : item.status != 200 && item.status != ''
+						}" style="margin-top: 7px;float: left;margin-right: 10px;"></span>
+						<div class="input-group">
+							<input type="text" class="form-control" v-on:keypress="inputKeyPress(item, key,$event)" v-model="item.url">
+							<div class="input-group-btn">
+								<button class="btn btn-default" type="button" @click="request(item, key),readLog()" v-bind:disabled="item.request ? true : false"><span v-if="!item.request">Verificar</span><span v-if="item.request" class="glyphicon glyphicon-refresh btnLoading"></span></button>
+								<button class="btn btn-danger" type="button" @click="removeService(key)">Remover</button>
+							</div>
+						</div>
 					</div>
 				</div>
+			</div>
+			<div class="col-xs-4">
+				<h3>Log</h3>
+				<textarea class="form-control" rows="20" disabled="disabled" id="contentLog">{{ contentLog }}</textarea>
 			</div>
 		</div>
 	</div>
@@ -111,7 +119,8 @@
 				 totalSeconds: 1,
 				 auto: false,
 				 fileLog: __dirname + "/log.txt",
-				 timeLoop: 10
+				 timeLoop: 10,
+				 contentLog: ''
 			 },
 			 methods: {
 				 request (item, key) {
@@ -123,7 +132,7 @@
 					 _self.itens[key] = item
 					 let url = !item.url.indexOf('http://') || !item.url.indexOf('https://') ? item.url : "http://" + item.url
 					 new WSService().request(url).done(function(retorno){
-						 if(retorno.status != 200){
+						if(retorno.status != 200){
 						 	_self.writeLog(retorno)
 							alert("Requisição à URL: "+retorno.responseURL+" falhou !")
 						}
@@ -173,7 +182,8 @@
 					 }
 					 loop()
 					 window.loop = setInterval(function(){
-						 loop()
+						loop()
+						_self.readLog()
 					 }, _self.timeLoop * 1000)
 				 },
 				 pauseLoop () {
@@ -193,22 +203,37 @@
 				 },
 				 inputKeyPress (item, key, event) {
 					 this.pauseLoop()
-					 if(event.key == 'Enter')
+					 if(event.key == 'Enter'){
 					 	this.request(item, key)
+					 	this.readLog()
+					 }
 				 },
 				 writeLog (resposta) {
-					 	let fs = require('fs');
-						let _self = this
-						var logger = fs.createWriteStream(_self.fileLog, {
-						  flags: 'a' // 'a' means appending (old data will be preserved)
-						})
-						let content = new Date() + " - Status: " + resposta.status + " - URL: " + resposta.responseURL
-						logger.write('\n' + content)
+				 	let fs = require('fs');
+					let _self = this
+					var logger = fs.createWriteStream(_self.fileLog, {
+					  flags: 'a' // 'a' means appending (old data will be preserved)
+					})
+					let content = ">>> " + new Date() + " - Status: " + resposta.status + " - URL: " + resposta.responseURL
+					logger.write(content + '\n\n')
+				 },
+				 readLog () {
+				 	let fs = require('fs');
+					let _self = this
+					fs.readFile(_self.fileLog, 'utf8', function(err, data){
+						if (err) throw err;
+						_self.contentLog = data
+						window.setTimeout(function() {
+							var elem = document.getElementById('contentLog');
+							elem.scrollTop = elem.scrollHeight;
+						}, 20)
+					})
 				 }
 			 },
 			 mounted () {
-					//this.writeLog("igor ferrani")
-				}
+			 	let _self = this
+				_self.readLog()
+			}
 		 })
 	</script>
 </body>
