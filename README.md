@@ -1,6 +1,8 @@
 # ServiceMonitor.electron
 Monitorador de serviços web
 
+![ServiceMonitor](https://github.com/igorferrani/ServiceMonitor.electron/raw/master/monitorador.png)
+
 ### Iniciando o projeto ###
 
 Baixe o repositório em seu diretório local:
