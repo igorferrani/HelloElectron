@@ -1,10 +1,10 @@
-const remote = require('electron').remote
-const main = remote.require('./main.js')
+const shell = require('shelljs');
 
-let button = document.createElement('button')
-button.textContent = "Open Window"
-document.body.appendChild(button)
+var list = [
+	'8.8.8.8',
+	'www.google.com'
+]
 
-button.addEventListener('click', () => {
-	main.openWindow()
-})
+var retorno = shell.exec("ping " + list[1] + " -c 1");
+
+console.log("retorno: ", retorno.stdout);
